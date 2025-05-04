@@ -1,16 +1,37 @@
-from mrjob.job import MRJob
+import os
 import re
+import pandas as pd
 
-WORD_REGEXP = re.compile(r"[\w']+")
+os.listdir()
 
-class MRWordCount(MRJob):
+def mapper(review):
+    review = review.strip()
+    review = review.lower()
+    review = re.findall("[a-z]+", review)
+    return review
 
-    def mapper(self, _, line):
-        for word in WORD_REGEXP.findall(line):
-            yield word, 1
 
-    def reducer(self, word, counts):
-        yield word, sum(counts)
+def reduce(review):
+    word_count = {}
+    for word in review:
+        word_count[word] = review.count(word)
+    return word_count
 
-if __name__ == '__main__':
-    MRWordCount.run()
+
+def map_reduce(file_name):
+    with open(file_name, "r") as file:
+        review = file.read()
+        
+    mapped = mapper(review)
+    reducer = reduce(mapped)
+    
+    x1, x2 = [], []
+    for word, count in reducer.items():
+        x1.append(word)
+        x2.append(count)
+    return x1, x2
+
+y1, y2 = map_reduce("sample.txt")
+
+dict1 = {"count":y2}
+pd.DataFrame(dict1, index=y1)
